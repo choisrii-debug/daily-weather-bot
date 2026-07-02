@@ -93,9 +93,12 @@ def get_kma_weather():
 # ==========================================
 # 3. 카카오톡 '나에게 보내기' 함수
 # ==========================================
-def send_kakao_me(text, access_token):
+def send_kakao_me(text):
+    # 카카오 테스트 도구에서 발급받은 엄청 긴 그 액세스 토큰을 여기 따옴표 안에 직접 넣으세요!
+    MY_ACCESS_TOKEN = "LeMfbblIL2S3wZzqIEOyRwDK4hqT6CbQAAAAAQoXIS0AAAGfIzVq6h7SOb8w2j0_" 
+    
     url = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
-    headers = {"Authorization": f"Bearer {access_token}"}
+    headers = {"Authorization": f"Bearer {MY_ACCESS_TOKEN}"}
 
     template_object = {
         "object_type": "text",
