@@ -2,14 +2,13 @@ import datetime
 import time
 import requests
 import json
-import os
 
 # ==========================================
-# 1. 설정 정보 입력
+# 1. 설정 정보 입력 (Firebase 연동)
 # ==========================================
-# ⚠️ 중요: 토큰 정보들을 코드에 직접 적지 않고, 깃허브 환경변수(Secrets)에서 안전하게 읽어옵니다.
-REST_API_KEY = os.environ.get("fb2fecd4c89647d97f5a759e448d00c8")
-REFRESH_TOKEN = os.environ.get("LeMfbblIL2S3wZzqIEOyRwDK4hqT6CbQAAAAAQoXIS0AAAGfIzVq6h7SOb8w2j0_")
+# 🎯 주소 맨 뒤에 반드시 '/tokens.json'이 붙어있어야 합니다! 
+# 진아님의 파이어베이스 주소로 완벽하게 셋팅해 두었습니다.
+FIREBASE_URL = "https://weather-bot-6ca38-default-rtdb.firebaseio.com/tokens.json"
 
 # 공공데이터포털(기상청) 인증키 (Decoding)
 DATA_GO_KR_KEY = "ca7c28c19530e6217757ee652fa803c0686247e1bb825f9faddeeec152c3b03b"
@@ -19,27 +18,46 @@ NX = "62"
 NY = "126"
 
 # ==========================================
-# 🔑 카카오 Refresh Token으로 새로운 Access Token 따오기
+# 🔑 Firebase 메모장에서 토큰 읽고 쓰기
 # ==========================================
-def get_new_access_token():
+def get_tokens_from_firebase():
+    try:
+        res = requests.get(FIREBASE_URL).json()
+        return res
+    except Exception as e:
+        print("Firebase 읽기 오류:", e)
+        return None
+
+def update_tokens_to_firebase(access_token, refresh_token):
+    try:
+        data = {"access_token": access_token, "refresh_token": refresh_token}
+        requests.put(FIREBASE_URL, json=data)
+        print("💾 새로운 토큰들이 Firebase 메모장에 안전하게 저장되었습니다!")
+    except Exception as e:
+        print("Firebase 저장 오류:", e)
+
+# ==========================================
+# 🔄 카카오 토큰 갱신하기 (무한 동력의 핵심)
+# ==========================================
+def refresh_kakao_token(rest_api_key, current_refresh_token):
     url = "https://kauth.kakao.com/oauth/token"
     payload = {
         "grant_type": "refresh_token",
-        "client_id": REST_API_KEY,
-        "refresh_token": REFRESH_TOKEN,
+        "client_id": rest_api_key,
+        "refresh_token": current_refresh_token,
     }
     
-    try:
-        res = requests.post(url, data=payload).json()
-        if "access_token" in res:
-            print("✅ Refresh Token을 사용하여 새로운 Access Token 발급 성공!")
-            return res["access_token"]
-        else:
-            print(f"❌ 토큰 갱신 실패: {res}")
-            return None
-    except Exception as e:
-        print(f"토큰 갱신 중 오류 발생: {e}")
-        return None
+    res = requests.post(url, data=payload).json()
+    
+    # 카카오는 새 토큰을 줄 때 refresh_token을 새로 줄 때도 있고 안 줄 때도 있습니다.
+    new_access = res.get("access_token")
+    new_refresh = res.get("refresh_token", current_refresh_token) # 안 주면 기존 것 유지
+    
+    if new_access:
+        return new_access, new_refresh
+    else:
+        print("카카오 서버 응답 에러:", res)
+        return None, None
 
 # ==========================================
 # 2. 기상청 단기예보 데이터 가져오기
@@ -87,18 +105,15 @@ def get_kma_weather():
             f"{sky_status}\n\n🌂 강수확률 {pop_rain}%\n\n즐거운 하루 보내세요!"
         )
     except Exception as e:
-        print("기상청 API 호출 오류:", e)
+        print("기상청 API 오류 발생으로 기본 문구로 대체합니다:", e)
         return "🌤️ 좋은 아침입니다!\n\n📍 송파구\n\n현재 24℃\n최고 31℃\n최저 22℃\n\n☀️ 맑음\n\n🌂 강수확률 10%\n\n즐거운 하루 보내세요!"
 
 # ==========================================
 # 3. 카카오톡 '나에게 보내기' 함수
 # ==========================================
-def send_kakao_me(text):
-    # 카카오 테스트 도구에서 발급받은 엄청 긴 그 액세스 토큰을 여기 따옴표 안에 직접 넣으세요!
-    MY_ACCESS_TOKEN = "LeMfbblIL2S3wZzqIEOyRwDK4hqT6CbQAAAAAQoXIS0AAAGfIzVq6h7SOb8w2j0_" 
-    
+def send_kakao_me(text, access_token):
     url = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
-    headers = {"Authorization": f"Bearer {MY_ACCESS_TOKEN}"}
+    headers = {"Authorization": f"Bearer {access_token}"}
 
     template_object = {
         "object_type": "text",
@@ -112,24 +127,34 @@ def send_kakao_me(text):
 
     payload = {"template_object": json.dumps(template_object, ensure_ascii=False)}
     res = requests.post(url, headers=headers, data=payload)
-    
     if res.status_code == 200:
         print("🎉 카카오톡 메시지 전송 성공!")
     else:
-        print(f"❌ 전송 실패! 에러 코드: {res.status_code}, 내용: {res.text}")
+        print(f"❌ 전송 실패: {res.text}")
 
 def job():
-    # 1. 깃허브 실행 시마다 자동으로 신규 Access Token 받아오기
-    access_token = get_new_access_token()
-    if not access_token:
-        print("토큰 확보 실패로 작업을 중단합니다.")
+    # 1. Firebase 메모장에서 숨겨둔 토큰 꺼내기
+    db_tokens = get_tokens_from_firebase()
+    if not db_tokens:
+        print("❌ Firebase 메모장이 비어있거나 주소가 잘못되어 읽을 수 없습니다.")
         return
         
-    # 2. 날씨 정보 가져오기
-    weather_info = get_kma_weather()
+    # 2. 카카오 REST API Key (진아님의 고유 키값)
+    rest_key = "fb2fecd4c89647d97f5a759e448d00c8"
     
-    # 3. 메시지 전송
-    send_kakao_me(weather_info, access_token)
+    # 3. 토큰 교환하기
+    print("🔄 Firebase 토큰을 사용해 카카오 토큰 갱신을 시도합니다...")
+    new_access, new_refresh = refresh_kakao_token(rest_key, db_tokens["refresh_token"])
+    
+    if not new_access:
+        print("❌ 토큰 확보 실패로 작업을 중단합니다. 파이어베이스에 싱싱한 토큰이 들어있는지 확인해 주세요.")
+        return
+        
+    # 4. 새로 바뀐 따끈따끈한 토큰을 Firebase 메모장에 바로 업데이트! (기억상실증 치료)
+    update_tokens_to_firebase(new_access, new_refresh)
+    
+    # 5. 날씨 전송
+    weather_info = get_kma_weather()
+    send_kakao_me(weather_info, new_access)
 
-# 즉시 실행
 job()
