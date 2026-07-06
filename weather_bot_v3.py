@@ -140,7 +140,7 @@ def job():
         return
         
     # 2. 카카오 REST API Key (진아님의 고유 키값)
-    rest_key = "fb2fecd4c89647d97f5a759e448d00c8"
+    rest_key = "aef2872fdfd6af2348e0aa7691c2603d"
     
     # 3. 토큰 교환하기
     print("🔄 Firebase 토큰을 사용해 카카오 토큰 갱신을 시도합니다...")
