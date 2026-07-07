@@ -40,7 +40,7 @@ def update_tokens_to_firebase(access_token, refresh_token):
 # ==========================================
 # 🔄 카카오 토큰 갱신하기 (무한 동력의 핵심)
 # ==========================================
-def refresh_kakao_token(rest_api_key, client_secret, curerent_refresh_token):
+def refresh_kakao_token(rest_api_key, client_secret, current_refresh_token):
     url = "https://kauth.kakao.com/oauth/token"
     payload = {
         "grant_type": "refresh_token",
