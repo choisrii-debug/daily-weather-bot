@@ -27,3 +27,7 @@ jobs:
     - name: Run Weather Bot
       run: |
         python weather_bot_v3.py
+        env:                                          # ← 이 블록이 없다면 통째로 추가
+          KAKAO_REST_KEY: ${{ secrets.KAKAO_REST_KEY }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          FIREBASE_URL: ${{ secrets.FIREBASE_URL }}
