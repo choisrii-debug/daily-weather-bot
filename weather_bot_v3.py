@@ -9,7 +9,7 @@ import json
 # ==========================================
 # 🎯 주소 맨 뒤에 반드시 '/tokens.json'이 붙어있어야 합니다! 
 # 진아님의 파이어베이스 주소로 완벽하게 셋팅해 두었습니다.
-FIREBASE_URL = "https://weather-bot-6ca38-default-rtdb.firebaseio.com/tokens.json"
+FIREBASE_URL = os.environ.get("FIREBASE_URL")
 
 # 공공데이터포털(기상청) 인증키 (Decoding)
 DATA_GO_KR_KEY = "ca7c28c19530e6217757ee652fa803c0686247e1bb825f9faddeeec152c3b03b"
@@ -142,7 +142,8 @@ def job():
         return
         
     # 2. 카카오 REST API Key (진아님의 고유 키값)
-    FIREBASE_URL = os.environ.get("FIREBASE_URL")
+    rest_key = os.environ.get("KAKAO_REST_KEY")
+    client_secret = os.environ.get("KAKAO_CLIENT_SECRET")
     
     # 3. 토큰 교환하기
     print("🔄 Firebase 토큰을 사용해 카카오 토큰 갱신을 시도합니다...")
