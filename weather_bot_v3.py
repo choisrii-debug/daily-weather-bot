@@ -145,7 +145,7 @@ def job():
     
     # 3. 토큰 교환하기
     print("🔄 Firebase 토큰을 사용해 카카오 토큰 갱신을 시도합니다...")
-    new_access, new_refresh = refresh_kakao_token(rest_key, db_tokens["refresh_token"])
+    new_access, new_refresh = refresh_kakao_token(rest_key, client_secret, db_tokens["refresh_token"])
     
     if not new_access:
         print("❌ 토큰 확보 실패로 작업을 중단합니다. 파이어베이스에 싱싱한 토큰이 들어있는지 확인해 주세요.")
