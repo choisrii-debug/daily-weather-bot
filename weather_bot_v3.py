@@ -124,7 +124,7 @@ def send_kakao_me(text, access_token):
             "web_url": "http://localhost",
             "mobile_web_url": "http://localhost"
         },
-        "button_title": " " 
+        "button_title": "자세히 보기" 
     }
 
     payload = {"template_object": json.dumps(template_object, ensure_ascii=False)}
