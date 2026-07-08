@@ -137,7 +137,7 @@ def send_kakao_me(text, access_token):
 
 def job():
     # 1. 아까 주소창 code= 뒤에서 복사한 vWu37...로 시작하는 긴 글자를 아래 따옴표 안에 넣으세요!
-    auth_code = "HkwIBdDvDSzAKwQyJeH-xhOJ2RWP2kjACaBfsYjNXdIwxwaRU9XP3QAAAAQKFxafAAABn0HDjMmBPKUF0hG4dQ" 
+    auth_code = "su0-63H6npct1st-wYDZRNIz-H6idXGrTLjqYoF7PKXOsnfZbBa_kQAAAAQKDR_RAAABn0HFp4H6Fwx8Dt1GgQ" 
     
     rest_key = os.environ.get("KAKAO_REST_KEY")
     
@@ -147,7 +147,7 @@ def job():
         "grant_type": "authorization_code",
         "client_id": rest_key,
          "client_secret": os.environ.get("KAKAO_CLIENT_SECRET"),
-        "redirect_uri": "http://localhost:3000/",  # 진아님 주소창에 찍힌 포트 3000번 완벽 반영!
+        "redirect_uri": "http://localhost:3000",  # 진아님 주소창에 찍힌 포트 3000번 완벽 반영!
         "code": auth_code
     }
     res = requests.post(url, data=payload).json()
