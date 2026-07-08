@@ -137,3 +137,11 @@ def send_kakao_me(text, access_token):
         print("🎉 카카오톡 메시지 전송 성공!")
     else:
         print(f"❌ 전송 실패: {res.text}")
+
+# ... (기존 코드들) ...
+    # 5. 날씨 전송
+    weather_info = get_kma_weather()
+    send_kakao_me(weather_info, new_access)
+
+# 🎯 이 구절이 파일 맨 마지막 줄에 왼쪽 벽에 딱 붙어서 적혀있어야 합니다!
+job()
