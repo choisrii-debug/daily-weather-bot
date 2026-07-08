@@ -134,13 +134,10 @@ def send_kakao_me(text, access_token):
     else:
         print(f"❌ 전송 실패: {res.text}")
 
-def job():
-    # ==========================================
-# 🎯 [수정 구간] 딱 한 번만 이 코드로 실행해서 파이어베이스를 채웁니다!
-# ==========================================
+
 def job():
     # 1. 아까 주소창 code= 뒤에서 복사한 vWu37...로 시작하는 긴 글자를 아래 따옴표 안에 넣으세요!
-    auth_code = "IT9B1LIb_oqxjBzkCx5UM84IFQFhsUtxd6YaiMQ4WIylrCjwpc87fgAAAAQKDRmQAAABn0G-WG5Udd9ffL_GXA" 
+    auth_code = "_jomcLV7TTJeY8WlGlTgTOKOg98ExkOd4gJpnZIrpr1aJr5lUf2WgwAAAAQKDQ1fAAABn0HCL3Go9NUiJo7xnA" 
     
     rest_key = os.environ.get("KAKAO_REST_KEY")
     
@@ -149,6 +146,7 @@ def job():
     payload = {
         "grant_type": "authorization_code",
         "client_id": rest_key,
+         "client_secret": os.environ.get("KAKAO_CLIENT_SECRET")
         "redirect_uri": "http://localhost:3000/",  # 진아님 주소창에 찍힌 포트 3000번 완벽 반영!
         "code": auth_code
     }
