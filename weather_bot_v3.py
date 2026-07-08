@@ -121,8 +121,8 @@ def send_kakao_me(text, access_token):
         "object_type": "text",
         "text": text,
         "link": {
-            "web_url": "http://weather.naver.com",
-            "mobile_web_url": "http://weather.naver.com"
+            "web_url": "https://weather.naver.com",
+            "mobile_web_url": "https://weather.naver.com"
         },
         "button_title": "자세히 보기" 
     }
