@@ -140,7 +140,7 @@ def job():
 # ==========================================
 def job():
     # 1. 아까 주소창 code= 뒤에서 복사한 vWu37...로 시작하는 긴 글자를 아래 따옴표 안에 넣으세요!
-    auth_code = "oRffAtsQp7rL8wVzWxe6kJoZdMALax9ksWD-o8KdBFP6Zhtf8STleQAAAAQKDSKZAAABn0G2nF8WphHJzwXJqw" 
+    auth_code = "IT9B1LIb_oqxjBzkCx5UM84IFQFhsUtxd6YaiMQ4WIylrCjwpc87fgAAAAQKDRmQAAABn0G-WG5Udd9ffL_GXA" 
     
     rest_key = os.environ.get("KAKAO_REST_KEY")
     
