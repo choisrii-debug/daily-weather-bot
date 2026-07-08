@@ -121,8 +121,8 @@ def send_kakao_me(text, access_token):
         "object_type": "text",
         "text": text,
         "link": {
-            "web_url": "https://www.google.com"",
-            "mobile_web_url": "https://www.google.com""
+            "web_url": "https://www.google.com",
+            "mobile_web_url": "https://www.google.com"
         },
         "button_title": "자세히 보기" 
     }
