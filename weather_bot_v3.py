@@ -135,29 +135,37 @@ def send_kakao_me(text, access_token):
         print(f"❌ 전송 실패: {res.text}")
 
 def job():
-    # 1. Firebase 메모장에서 숨겨둔 토큰 꺼내기
-    db_tokens = get_tokens_from_firebase()
-    if not db_tokens:
-        print("❌ Firebase 메모장이 비어있거나 주소가 잘못되어 읽을 수 없습니다.")
-        return
-        
-    # 2. 카카오 REST API Key (진아님의 고유 키값)
+    # ==========================================
+# 🎯 [수정 구간] 딱 한 번만 이 코드로 실행해서 파이어베이스를 채웁니다!
+# ==========================================
+def job():
+    # 1. 아까 주소창 code= 뒤에서 복사한 vWu37...로 시작하는 긴 글자를 아래 따옴표 안에 넣으세요!
+    auth_code = "oRffAtsQp7rL8wVzWxe6kJoZdMALax9ksWD-o8KdBFP6Zhtf8STleQAAAAQKDSKZAAABn0G2nF8WphHJzwXJqw" 
+    
     rest_key = os.environ.get("KAKAO_REST_KEY")
-    client_secret = os.environ.get("KAKAO_CLIENT_SECRET")
     
-    # 3. 토큰 교환하기
-    print("🔄 Firebase 토큰을 사용해 카카오 토큰 갱신을 시도합니다...")
-    new_access, new_refresh = refresh_kakao_token(rest_key, client_secret, db_tokens["refresh_token"])
+    print("⚙️ 새 앱의 비밀 코드로 최초 토큰 세트 발급을 요청합니다...")
+    url = "https://kauth.kakao.com/oauth/token"
+    payload = {
+        "grant_type": "authorization_code",
+        "client_id": rest_key,
+        "redirect_uri": "http://localhost:3000/",  # 진아님 주소창에 찍힌 포트 3000번 완벽 반영!
+        "code": auth_code
+    }
+    res = requests.post(url, data=payload).json()
     
-    if not new_access:
-        print("❌ 토큰 확보 실패로 작업을 중단합니다. 파이어베이스에 싱싱한 토큰이 들어있는지 확인해 주세요.")
-        return
+    access_token = res.get("access_token")
+    refresh_token = res.get("refresh_token")
+    
+    if access_token and refresh_token:
+        # 2. 파이어베이스 메모장에 자동으로 최초 충전!
+        update_tokens_to_firebase(access_token, refresh_token)
+        print("🎉 [대성공] 최초 토큰 충전 완료! 이제 첫 날씨 카톡을 발송합니다.")
         
-    # 4. 새로 바뀐 따끈따끈한 토큰을 Firebase 메모장에 바로 업데이트! (기억상실증 치료)
-    update_tokens_to_firebase(new_access, new_refresh)
-    
-    # 5. 날씨 전송
-    weather_info = get_kma_weather()
-    send_kakao_me(weather_info, new_access)
+        # 3. 내 폰으로 카톡 전송 테스트
+        weather_info = get_kma_weather()
+        send_kakao_me(weather_info, access_token)
+    else:
+        print("❌ 토큰 발급 실패. 카카오 서버의 응답을 확인하세요:", res)
 
 job()
