@@ -7,8 +7,6 @@ import json
 # ==========================================
 # 1. 설정 정보 입력 (Firebase 연동)
 # ==========================================
-# 🎯 주소 맨 뒤에 반드시 '/tokens.json'이 붙어있어야 합니다! 
-# 진아님의 파이어베이스 주소로 완벽하게 셋팅해 두었습니다.
 FIREBASE_URL = os.environ.get("FIREBASE_URL")
 
 # 공공데이터포털(기상청) 인증키 (Decoding)
@@ -51,7 +49,6 @@ def refresh_kakao_token(rest_api_key, client_secret, current_refresh_token):
     
     res = requests.post(url, data=payload).json()
     
-    # 카카오는 새 토큰을 줄 때 refresh_token을 새로 줄 때도 있고 안 줄 때도 있습니다.
     new_access = res.get("access_token")
     new_refresh = res.get("refresh_token", current_refresh_token) # 안 주면 기존 것 유지
     
@@ -117,8 +114,7 @@ def send_kakao_me(text, access_token):
     url = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    # 🎯 여기를 아래 주소로 바꿔주시면 네이버가 폰 GPS를 읽어서 
-    # 진아님이 지금 계신 동네 날씨를 자동으로 띄워줍니다!
+    # 🎯 네이버가 폰 GPS를 읽어서 진아님 현재 지역 날씨를 자동으로 띄워주는 주소입니다!
     naver_weather_url = "https://search.naver.com/search.naver?query=날씨"
 
     template_object = {
@@ -128,7 +124,7 @@ def send_kakao_me(text, access_token):
             "web_url": naver_weather_url,
             "mobile_web_url": naver_weather_url
         },
-        "button_title": "네이버 날씨 보기"  # 👈 버튼 이름도 이쁘게 변경!
+        "button_title": "네이버 날씨 보기" 
     }
 
     payload = {"template_object": json.dumps(template_object, ensure_ascii=False)}
@@ -138,10 +134,34 @@ def send_kakao_me(text, access_token):
     else:
         print(f"❌ 전송 실패: {res.text}")
 
-# ... (기존 코드들) ...
+# ==========================================
+# 🔄 실행 메인 루틴 (로봇 몸체와 시동 버튼 완벽 부활!)
+# ==========================================
+def job():
+    # 1. Firebase 메모장에서 숨겨둔 토큰 꺼내기
+    db_tokens = get_tokens_from_firebase()
+    if not db_tokens:
+        print("❌ Firebase 메모장이 비어있거나 주소가 잘못되어 읽을 수 없습니다.")
+        return
+        
+    # 2. 카카오 보안 키값 가져오기
+    rest_key = os.environ.get("KAKAO_REST_KEY")
+    client_secret = os.environ.get("KAKAO_CLIENT_SECRET")
+    
+    # 3. 토큰 교환하기
+    print("🔄 Firebase 토큰을 사용해 카카오 토큰 갱신을 시도합니다...")
+    new_access, new_refresh = refresh_kakao_token(rest_key, client_secret, db_tokens["refresh_token"])
+    
+    if not new_access:
+        print("❌ 토큰 확보 실패로 작업을 중단합니다. 파이어베이스에 싱싱한 토큰이 들어있는지 확인해 주세요.")
+        return
+        
+    # 4. 새로 바뀐 따끈따끈한 토큰을 Firebase 메모장에 바로 업데이트!
+    update_tokens_to_firebase(new_access, new_refresh)
+    
     # 5. 날씨 전송
     weather_info = get_kma_weather()
     send_kakao_me(weather_info, new_access)
 
-# 🎯 이 구절이 파일 맨 마지막 줄에 왼쪽 벽에 딱 붙어서 적혀있어야 합니다!
+# 🚀 진짜 시동 버튼 조립 완료!
 job()
