@@ -115,7 +115,7 @@ def send_kakao_me(text, access_token):
     headers = {"Authorization": f"Bearer {access_token}"}
 
     # 🎯 네이버가 폰 GPS를 읽어서 진아님 현재 지역 날씨를 자동으로 띄워주는 주소입니다!
-    naver_weather_url = "https://search.naver.com/search.naver?query=날씨"
+    naver_weather_url = "https://weather.naver.com"
 
     template_object = {
         "object_type": "text",
