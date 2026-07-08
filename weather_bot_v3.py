@@ -111,20 +111,24 @@ def get_kma_weather():
         return "🌤️ 좋은 아침입니다!\n\n📍 송파구\n\n현재 24℃\n최고 31℃\n최저 22℃\n\n☀️ 맑음\n\n🌂 강수확률 10%\n\n즐거운 하루 보내세요!"
 
 # ==========================================
-# 3. 카카오톡 '나에게 보내기' 함수
+# 3. 카카오톡 '나에게 보내기' 함수 (내 위치 자동 인식 버전)
 # ==========================================
 def send_kakao_me(text, access_token):
     url = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
     headers = {"Authorization": f"Bearer {access_token}"}
 
+    # 🎯 여기를 아래 주소로 바꿔주시면 네이버가 폰 GPS를 읽어서 
+    # 진아님이 지금 계신 동네 날씨를 자동으로 띄워줍니다!
+    naver_weather_url = "https://search.naver.com/search.naver?query=날씨"
+
     template_object = {
         "object_type": "text",
         "text": text,
         "link": {
-            "web_url": "https://weather.naver.com",
-            "mobile_web_url": "https://weather.naver.com"
+            "web_url": naver_weather_url,
+            "mobile_web_url": naver_weather_url
         },
-        "button_title": "자세히 보기" 
+        "button_title": "네이버 날씨 보기"  # 👈 버튼 이름도 이쁘게 변경!
     }
 
     payload = {"template_object": json.dumps(template_object, ensure_ascii=False)}
@@ -133,31 +137,3 @@ def send_kakao_me(text, access_token):
         print("🎉 카카오톡 메시지 전송 성공!")
     else:
         print(f"❌ 전송 실패: {res.text}")
-
-def job():
-    # 1. Firebase 메모장에서 숨겨둔 토큰 꺼내기
-    db_tokens = get_tokens_from_firebase()
-    if not db_tokens:
-        print("❌ Firebase 메모장이 비어있거나 주소가 잘못되어 읽을 수 없습니다.")
-        return
-
-    # 2. 카카오 REST API Key
-    rest_key = os.environ.get("KAKAO_REST_KEY")
-    client_secret = os.environ.get("KAKAO_CLIENT_SECRET")
-
-    # 3. 토큰 교환하기
-    print("🔄 Firebase 토큰을 사용해 카카오 토큰 갱신을 시도합니다...")
-    new_access, new_refresh = refresh_kakao_token(rest_key, client_secret, db_tokens["refresh_token"])
-
-    if not new_access:
-        print("❌ 토큰 확보 실패로 작업을 중단합니다. 파이어베이스에 싱싱한 토큰이 들어있는지 확인해 주세요.")
-        return
-
-    # 4. 새로 바뀐 따끈따끈한 토큰을 Firebase 메모장에 바로 업데이트! (기억상실증 치료)
-    update_tokens_to_firebase(new_access, new_refresh)
-
-    # 5. 날씨 전송
-    weather_info = get_kma_weather()
-    send_kakao_me(weather_info, new_access)
-
-job()
