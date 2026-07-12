@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘의 날씨 - 송파구</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+  :root {
+    --sky-top: #6b8cbf; --sky-bottom: #a9c4e0;
+    --ink: #1c2430; --paper: #fbfaf7; --muted: #6b7280; --accent: #e8a33d;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Noto Sans KR',sans-serif; background:var(--paper); color:var(--ink); display:flex; justify-content:center; }
+  .page { width:100%; max-width:420px; min-height:100vh; background:var(--paper); }
+  .sky { position:relative; padding:32px 24px 40px; background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 100%); overflow:hidden; border-radius:0 0 32px 32px; }
+  .sky::before { content:""; position:absolute; top:-60px; right:-40px; width:220px; height:220px; background:radial-gradient(circle,rgba(255,255,255,0.35) 0%,rgba(255,255,255,0) 70%); border-radius:50%; }
+  .date { font-size:13px; letter-spacing:0.04em; color:rgba(255,255,255,0.85); font-weight:500; }
+  .location { font-family:'Noto Serif KR',serif; font-size:22px; font-weight:600; color:white; margin-top:4px; }
+  .temp-row { display:flex; align-items:flex-end; gap:14px; margin-top:28px; }
+  .temp-now { font-family:'Noto Serif KR',serif; font-size:76px; font-weight:700; color:white; line-height:1; letter-spacing:-0.02em; }
+  .temp-meta { padding-bottom:10px; }
+  .condition { font-size:16px; color:white; font-weight:500; }
+  .hilo { font-size:13px; color:rgba(255,255,255,0.8); margin-top:2px; }
+  .body-content { padding:24px 24px 40px; }
+  .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:28px; }
+  .stat-card { background:white; border:1px solid #eee6d8; border-radius:14px; padding:14px 10px; text-align:center; }
+  .stat-label { font-size:11px; color:var(--muted); margin-bottom:6px; }
+  .stat-value { font-family:'Noto Serif KR',serif; font-size:18px; font-weight:600; }
+  .stat-value.warn { color:#c96b3f; }
+  .footer-note { text-align:center; font-size:11px; color:#b7b0a0; margin-top:12px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="sky">
+    <div class="date">2026년 07월 12일</div>
+    <div class="location">📍 송파구</div>
+    <div class="temp-row">
+      <div class="temp-now">30°</div>
+      <div class="temp-meta">
+        <div class="condition">⛅ 구름많음</div>
+        <div class="hilo">최고 35° · 최저 22°</div>
+      </div>
+    </div>
+  </div>
+  <div class="body-content">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">강수확률</div>
+        <div class="stat-value warn">0%</div>
+      </div>
+    </div>
+    <div class="footer-note">매일 아침 자동으로 업데이트되는 날씨 페이지입니다</div>
+  </div>
+</div>
+</body>
+</html>
