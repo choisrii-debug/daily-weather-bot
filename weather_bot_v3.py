@@ -15,6 +15,10 @@ DATA_GO_KR_KEY = "ca7c28c19530e6217757ee652fa803c0686247e1bb825f9faddeeec152c3b0
 # 송파구 기준 기상청 주소 좌표
 NX = "62"
 NY = "126"
+LOCATION_NAME = "송파구"
+
+# GitHub Pages 페이지 주소 (5단계에서 GitHub 아이디 알려주시면 채워드릴게요)
+PAGE_URL = "https://YOUR_GITHUB_ID.github.io/daily-weather-bot/"
 
 # ==========================================
 # 🔑 Firebase 메모장에서 토큰 읽고 쓰기
@@ -36,7 +40,7 @@ def update_tokens_to_firebase(access_token, refresh_token):
         print("Firebase 저장 오류:", e)
 
 # ==========================================
-# 🔄 카카오 토큰 갱신하기 (무한 동력의 핵심)
+# 🔄 카카오 토큰 갱신하기
 # ==========================================
 def refresh_kakao_token(rest_api_key, client_secret, current_refresh_token):
     url = "https://kauth.kakao.com/oauth/token"
@@ -46,12 +50,12 @@ def refresh_kakao_token(rest_api_key, client_secret, current_refresh_token):
         "client_secret": client_secret,
         "refresh_token": current_refresh_token,
     }
-    
+
     res = requests.post(url, data=payload).json()
-    
+
     new_access = res.get("access_token")
-    new_refresh = res.get("refresh_token", current_refresh_token) # 안 주면 기존 것 유지
-    
+    new_refresh = res.get("refresh_token", current_refresh_token)
+
     if new_access:
         return new_access, new_refresh
     else:
@@ -59,7 +63,7 @@ def refresh_kakao_token(rest_api_key, client_secret, current_refresh_token):
         return None, None
 
 # ==========================================
-# 2. 기상청 단기예보 데이터 가져오기
+# 2. 기상청 단기예보 데이터 가져오기 (dict로 반환)
 # ==========================================
 def get_kma_weather():
     url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
@@ -78,53 +82,153 @@ def get_kma_weather():
         "ny": NY
     }
 
+    # 기본값 (API 실패 시 대체용)
+    data = {
+        "date_str": now.strftime("%Y년 %m월 %d일"),
+        "location": LOCATION_NAME,
+        "temp_now": "24",
+        "temp_high": "31",
+        "temp_low": "22",
+        "condition_text": "맑음",
+        "condition_emoji": "☀️",
+        "rain_chance": "10",
+    }
+
     try:
         response = requests.get(url, params=params).json()
         items = response["response"]["body"]["items"]["item"]
 
-        current_temp, max_temp, min_temp, pop_rain = "24", "31", "22", "10"
-        sky_status = "☀️ 맑음"
-
         for item in items:
             category = item["category"]
             fcst_value = item["fcstValue"]
-            if category == "TMP": current_temp = fcst_value
-            elif category == "TMX": max_temp = int(float(fcst_value))
-            elif category == "TMN": min_temp = int(float(fcst_value))
-            elif category == "POP": pop_rain = fcst_value
+            if category == "TMP":
+                data["temp_now"] = fcst_value
+            elif category == "TMX":
+                data["temp_high"] = int(float(fcst_value))
+            elif category == "TMN":
+                data["temp_low"] = int(float(fcst_value))
+            elif category == "POP":
+                data["rain_chance"] = fcst_value
             elif category == "SKY":
                 sky_code = int(fcst_value)
-                if sky_code == 1: sky_status = "☀️ 맑음"
-                elif sky_code == 3: sky_status = "⛅ 구름많음"
-                else: sky_status = "☁️ 흐림"
+                if sky_code == 1:
+                    data["condition_text"] = "맑음"
+                    data["condition_emoji"] = "☀️"
+                elif sky_code == 3:
+                    data["condition_text"] = "구름많음"
+                    data["condition_emoji"] = "⛅"
+                else:
+                    data["condition_text"] = "흐림"
+                    data["condition_emoji"] = "☁️"
 
-        return (
-            f"🌤️ 좋은 아침입니다!\n\n📍 송파구\n\n"
-            f"현재 {current_temp}℃\n최고 {max_temp}℃\n최저 {min_temp}℃\n\n"
-            f"{sky_status}\n\n🌂 강수확률 {pop_rain}%\n\n즐거운 하루 보내세요!"
-        )
+        return data
     except Exception as e:
-        print("기상청 API 오류 발생으로 기본 문구로 대체합니다:", e)
-        return "🌤️ 좋은 아침입니다!\n\n📍 송파구\n\n현재 24℃\n최고 31℃\n최저 22℃\n\n☀️ 맑음\n\n🌂 강수확률 10%\n\n즐거운 하루 보내세요!"
+        print("기상청 API 오류 발생으로 기본 값으로 대체합니다:", e)
+        return data
 
 # ==========================================
-# 3. 카카오톡 '나에게 보내기' 함수 (내 위치 자동 인식 버전)
+# 3. 카카오톡용 문구 생성
+# ==========================================
+def build_kakao_text(w):
+    return (
+        f"{w['condition_emoji']} 좋은 아침입니다!\n\n📍 {w['location']}\n\n"
+        f"현재 {w['temp_now']}℃\n최고 {w['temp_high']}℃\n최저 {w['temp_low']}℃\n\n"
+        f"{w['condition_emoji']} {w['condition_text']}\n\n"
+        f"🌂 강수확률 {w['rain_chance']}%\n\n즐거운 하루 보내세요!"
+    )
+
+# ==========================================
+# 4. 오늘의 상세 날씨 페이지 생성 (+ 날짜별 기록 보관)
+# ==========================================
+def generate_weather_page(w):
+    html_content = f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘의 날씨 - {w['location']}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+  :root {{
+    --sky-top: #6b8cbf; --sky-bottom: #a9c4e0;
+    --ink: #1c2430; --paper: #fbfaf7; --muted: #6b7280; --accent: #e8a33d;
+  }}
+  * {{ box-sizing: border-box; }}
+  body {{ margin:0; font-family:'Noto Sans KR',sans-serif; background:var(--paper); color:var(--ink); display:flex; justify-content:center; }}
+  .page {{ width:100%; max-width:420px; min-height:100vh; background:var(--paper); }}
+  .sky {{ position:relative; padding:32px 24px 40px; background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 100%); overflow:hidden; border-radius:0 0 32px 32px; }}
+  .sky::before {{ content:""; position:absolute; top:-60px; right:-40px; width:220px; height:220px; background:radial-gradient(circle,rgba(255,255,255,0.35) 0%,rgba(255,255,255,0) 70%); border-radius:50%; }}
+  .date {{ font-size:13px; letter-spacing:0.04em; color:rgba(255,255,255,0.85); font-weight:500; }}
+  .location {{ font-family:'Noto Serif KR',serif; font-size:22px; font-weight:600; color:white; margin-top:4px; }}
+  .temp-row {{ display:flex; align-items:flex-end; gap:14px; margin-top:28px; }}
+  .temp-now {{ font-family:'Noto Serif KR',serif; font-size:76px; font-weight:700; color:white; line-height:1; letter-spacing:-0.02em; }}
+  .temp-meta {{ padding-bottom:10px; }}
+  .condition {{ font-size:16px; color:white; font-weight:500; }}
+  .hilo {{ font-size:13px; color:rgba(255,255,255,0.8); margin-top:2px; }}
+  .body-content {{ padding:24px 24px 40px; }}
+  .stat-grid {{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:28px; }}
+  .stat-card {{ background:white; border:1px solid #eee6d8; border-radius:14px; padding:14px 10px; text-align:center; }}
+  .stat-label {{ font-size:11px; color:var(--muted); margin-bottom:6px; }}
+  .stat-value {{ font-family:'Noto Serif KR',serif; font-size:18px; font-weight:600; }}
+  .stat-value.warn {{ color:#c96b3f; }}
+  .footer-note {{ text-align:center; font-size:11px; color:#b7b0a0; margin-top:12px; }}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="sky">
+    <div class="date">{w['date_str']}</div>
+    <div class="location">📍 {w['location']}</div>
+    <div class="temp-row">
+      <div class="temp-now">{w['temp_now']}°</div>
+      <div class="temp-meta">
+        <div class="condition">{w['condition_emoji']} {w['condition_text']}</div>
+        <div class="hilo">최고 {w['temp_high']}° · 최저 {w['temp_low']}°</div>
+      </div>
+    </div>
+  </div>
+  <div class="body-content">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">강수확률</div>
+        <div class="stat-value warn">{w['rain_chance']}%</div>
+      </div>
+    </div>
+    <div class="footer-note">매일 아침 자동으로 업데이트되는 날씨 페이지입니다</div>
+  </div>
+</div>
+</body>
+</html>"""
+
+    os.makedirs("docs", exist_ok=True)
+
+    # 오늘자 메인 페이지 (덮어쓰기)
+    with open("docs/index.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+    # 날짜별 기록 보관 (나중에 과거 예보 조회 기능 만들 때 대비)
+    date_key = datetime.datetime.now().strftime("%Y-%m-%d")
+    os.makedirs("docs/archive", exist_ok=True)
+    with open(f"docs/archive/{date_key}.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+    print("📄 오늘의 날씨 페이지 생성 완료!")
+
+# ==========================================
+# 5. 카카오톡 '나에게 보내기' 함수
 # ==========================================
 def send_kakao_me(text, access_token):
     url = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    # 🎯 네이버가 폰 GPS를 읽어서 진아님 현재 지역 날씨를 자동으로 띄워주는 주소입니다!
-    naver_weather_url = "https://weather.naver.com"
-
     template_object = {
         "object_type": "text",
         "text": text,
         "link": {
-            "web_url": naver_weather_url,
-            "mobile_web_url": naver_weather_url
+            "web_url": PAGE_URL,
+            "mobile_web_url": PAGE_URL
         },
-        "button_title": "네이버 날씨 보기" 
+        "button_title": "자세히 보기"
     }
 
     payload = {"template_object": json.dumps(template_object, ensure_ascii=False)}
@@ -135,33 +239,30 @@ def send_kakao_me(text, access_token):
         print(f"❌ 전송 실패: {res.text}")
 
 # ==========================================
-# 🔄 실행 메인 루틴 (로봇 몸체와 시동 버튼 완벽 부활!)
+# 🔄 실행 메인 루틴
 # ==========================================
 def job():
-    # 1. Firebase 메모장에서 숨겨둔 토큰 꺼내기
     db_tokens = get_tokens_from_firebase()
     if not db_tokens:
         print("❌ Firebase 메모장이 비어있거나 주소가 잘못되어 읽을 수 없습니다.")
         return
-        
-    # 2. 카카오 보안 키값 가져오기
+
     rest_key = os.environ.get("KAKAO_REST_KEY")
     client_secret = os.environ.get("KAKAO_CLIENT_SECRET")
-    
-    # 3. 토큰 교환하기
+
     print("🔄 Firebase 토큰을 사용해 카카오 토큰 갱신을 시도합니다...")
     new_access, new_refresh = refresh_kakao_token(rest_key, client_secret, db_tokens["refresh_token"])
-    
+
     if not new_access:
         print("❌ 토큰 확보 실패로 작업을 중단합니다. 파이어베이스에 싱싱한 토큰이 들어있는지 확인해 주세요.")
         return
-        
-    # 4. 새로 바뀐 따끈따끈한 토큰을 Firebase 메모장에 바로 업데이트!
-    update_tokens_to_firebase(new_access, new_refresh)
-    
-    # 5. 날씨 전송
-    weather_info = get_kma_weather()
-    send_kakao_me(weather_info, new_access)
 
-# 🚀 진짜 시동 버튼 조립 완료!
+    update_tokens_to_firebase(new_access, new_refresh)
+
+    # 날씨 데이터 조회 → 페이지 생성 → 카톡 발송
+    weather_data = get_kma_weather()
+    generate_weather_page(weather_data)
+    kakao_text = build_kakao_text(weather_data)
+    send_kakao_me(kakao_text, new_access)
+
 job()
