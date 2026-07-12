@@ -1,16 +1,15 @@
 name: Run Weather Bot
-
 on:
   schedule:
-    # ⚠️ 깃허브도 UTC(영국 시간) 기준입니다. 한국 시간 아침 7시 30분은 '22:30'입니다.
-    # 분 시 일 월 요일 순서입니다.
     - cron: '59 21 * * *'
-  workflow_dispatch: # 내가 원할 때 수동으로도 실행해 볼 수 있게 만드는 버튼입니다.
+  workflow_dispatch:
+
+permissions:
+  contents: write   # ← 이 블록 추가 (페이지 파일을 저장소에 다시 push하려면 필요)
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository code
       uses: actions/checkout@v4
@@ -26,7 +25,15 @@ jobs:
 
     - name: Run Weather Bot
       run: python weather_bot_v3.py
-      env:                                          # ← 이 블록이 없다면 통째로 추가
-          KAKAO_REST_KEY: ${{ secrets.KAKAO_REST_KEY }}
-          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
-          FIREBASE_URL: ${{ secrets.FIREBASE_URL }}
+      env:
+        KAKAO_REST_KEY: ${{ secrets.KAKAO_REST_KEY }}
+        KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+        FIREBASE_URL: ${{ secrets.FIREBASE_URL }}
+
+    - name: Commit and push weather page   # ← 이 스텝 추가
+      run: |
+        git config user.name "weather-bot"
+        git config user.email "bot@users.noreply.github.com"
+        git add docs/
+        git diff --staged --quiet || git commit -m "오늘의 날씨 페이지 업데이트"
+        git push
