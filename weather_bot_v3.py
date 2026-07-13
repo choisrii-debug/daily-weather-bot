@@ -242,7 +242,7 @@ def send_kakao_me(text, access_token):
 # 🔄 실행 메인 루틴 (최초 1회 토큰 발급용 - 임시)
 # ==========================================
 def job():
-    auth_code = "fb2fecd4c89647d97f5a759e448d00c8"
+    auth_code = "whBMth4oIfzSWcUbJJjoPhjFwg064C3ilJaXjBEAoNMT90iRSeH4NgAAAAQKDSKZAAABn1t1SuvRDLJpR7eCqA"
 
     rest_key = os.environ.get("KAKAO_REST_KEY")
     client_secret = os.environ.get("KAKAO_CLIENT_SECRET")
