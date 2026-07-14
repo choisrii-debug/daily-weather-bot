@@ -23,9 +23,25 @@
   .condition { font-size:16px; color:white; font-weight:500; }
   .hilo { font-size:13px; color:rgba(255,255,255,0.8); margin-top:2px; }
   .body-content { padding:24px 24px 40px; }
-  .stat-card { background:white; border:1px solid #eee6d8; border-radius:14px; padding:18px; text-align:center; margin-bottom:28px; }
-  .stat-label { font-size:12px; color:var(--muted); margin-bottom:8px; letter-spacing:0.04em; }
-  .stat-value { font-family:'Noto Serif KR',serif; font-size:28px; font-weight:700; color:#c96b3f; }
+  .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:28px; }
+  .stat-card { background:white; border:1px solid #eee6d8; border-radius:14px; padding:14px 10px; text-align:center; }
+  .stat-label { font-size:11px; color:var(--muted); margin-bottom:6px; }
+  .stat-value { font-family:'Noto Serif KR',serif; font-size:18px; font-weight:600; }
+  .stat-value.warn { color:#c96b3f; }
+  .stat-value.good { color:#3f8f5f; }
+  .section-title { font-size:12px; letter-spacing:0.08em; color:var(--muted); text-transform:uppercase; margin-bottom:10px; font-weight:700; }
+  .timeline { display:flex; justify-content:space-between; background:white; border:1px solid #eee6d8; border-radius:14px; padding:18px 14px; margin-bottom:28px; }
+  .timeline-item { text-align:center; flex:1; }
+  .timeline-item .t-label { font-size:11px; color:var(--muted); margin-bottom:8px; }
+  .timeline-item .t-icon { font-size:20px; margin-bottom:6px; }
+  .timeline-item .t-temp { font-size:14px; font-weight:600; }
+  .week-strip { display:flex; justify-content:space-between; margin-bottom:28px; }
+  .week-day { text-align:center; font-size:11px; color:var(--muted); }
+  .week-day .w-icon { font-size:16px; margin:6px 0; }
+  .week-day .w-temp { font-size:12px; color:var(--ink); font-weight:500; }
+  .rec-card { background:linear-gradient(135deg,#fff8ec 0%,#fdf1de 100%); border:1px solid #f0dfc0; border-radius:16px; padding:20px; margin-bottom:20px; }
+  .rec-title { font-size:14px; font-weight:700; margin-bottom:6px; }
+  .rec-text { font-size:13px; color:#5c4a2f; line-height:1.6; }
   .footer-note { text-align:center; font-size:11px; color:#b7b0a0; margin-top:12px; }
 </style>
 </head>
@@ -43,10 +59,80 @@
     </div>
   </div>
   <div class="body-content">
-    <div class="stat-card">
-      <div class="stat-label">오늘의 강수확률</div>
-      <div class="stat-value">60%</div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">강수확률</div>
+        <div class="stat-value warn">60%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">미세먼지</div>
+        <div class="stat-value good">좋음</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">자외선</div>
+        <div class="stat-value warn">낮음</div>
+      </div>
     </div>
+
+    <div class="section-title">시간대별 예보</div>
+    <div class="timeline">
+        <div class="timeline-item">
+          <div class="t-label">아침</div>
+          <div class="t-icon">☁️</div>
+          <div class="t-temp">29°</div>
+        </div>
+        <div class="timeline-item">
+          <div class="t-label">낮</div>
+          <div class="t-icon">🌧️</div>
+          <div class="t-temp">31°</div>
+        </div>
+        <div class="timeline-item">
+          <div class="t-label">오후 3시</div>
+          <div class="t-icon">🌧️</div>
+          <div class="t-temp">30°</div>
+        </div>
+        <div class="timeline-item">
+          <div class="t-label">저녁</div>
+          <div class="t-icon">🌧️</div>
+          <div class="t-temp">28°</div>
+        </div>
+    </div>
+
+    <div class="section-title">이번 주</div>
+    <div class="week-strip">
+        <div class="week-day">
+          <div>금</div>
+          <div class="w-icon">☀️</div>
+          <div class="w-temp">-°</div>
+        </div>
+        <div class="week-day">
+          <div>토</div>
+          <div class="w-icon">☀️</div>
+          <div class="w-temp">30°</div>
+        </div>
+        <div class="week-day">
+          <div>일</div>
+          <div class="w-icon">☀️</div>
+          <div class="w-temp">30°</div>
+        </div>
+        <div class="week-day">
+          <div>월</div>
+          <div class="w-icon">☀️</div>
+          <div class="w-temp">31°</div>
+        </div>
+        <div class="week-day">
+          <div>화</div>
+          <div class="w-icon">☀️</div>
+          <div class="w-temp">32°</div>
+        </div>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-title">☔ 오늘의 준비물</div>
+      <div class="rec-text">오후에 비 소식이 있어요. 외출 전에 우산 하나 챙겨두면 마음이 편할 거예요.</div>
+    </div>
+
     <div class="footer-note">매일 아침 자동으로 업데이트되는 날씨 페이지입니다</div>
   </div>
 </div>
