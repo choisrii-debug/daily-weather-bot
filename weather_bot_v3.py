@@ -235,7 +235,7 @@ def send_kakao_me(text, access_token):
 # 🔄 실행 메인 루틴 (최초 1회 토큰 발급용 - 임시, 이번 한 번만 실행)
 # ==========================================
 def job():
-    auth_code = "SbZDnxsCfSRV-G0LgPKGfXNHmxWFWhF5lkIdef5YnyIw3pzk1BIgCQAAAAQKDRlTAAABn1uExkHMISgqRbFCUQ"
+    auth_code = "q0ujoMB6XMZaKWjM2kvHz1_MN9Sv2AvC4e9NdE-i2X7ifoTNHkGMjwAAAAQKFxKWAAABn2AC55aQgW3aWXatGQ"
 
     rest_key = os.environ.get("KAKAO_REST_KEY")
     client_secret = os.environ.get("KAKAO_CLIENT_SECRET")
