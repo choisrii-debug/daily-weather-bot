@@ -17,8 +17,8 @@ NX = "62"
 NY = "126"
 LOCATION_NAME = "송파구"
 
-# GitHub Pages 페이지 주소 (5단계에서 GitHub 아이디 알려주시면 채워드릴게요)
-PAGE_URL = "https://YOUR_GITHUB_ID.github.io/daily-weather-bot/"
+# GitHub Pages 페이지 주소
+PAGE_URL = "https://choisrii-debug.github.io/daily-weather-bot/"
 
 # ==========================================
 # 🔑 Firebase 메모장에서 토큰 읽고 쓰기
@@ -82,7 +82,6 @@ def get_kma_weather():
         "ny": NY
     }
 
-    # 기본값 (API 실패 시 대체용)
     data = {
         "date_str": now.strftime("%Y년 %m월 %d일"),
         "location": LOCATION_NAME,
@@ -138,7 +137,7 @@ def build_kakao_text(w):
     )
 
 # ==========================================
-# 4. 오늘의 상세 날씨 페이지 생성 (+ 날짜별 기록 보관)
+# 4. 오늘의 상세 날씨 페이지 생성 (예쁜 디자인 버전)
 # ==========================================
 def generate_weather_page(w):
     html_content = f"""<!DOCTYPE html>
@@ -166,11 +165,9 @@ def generate_weather_page(w):
   .condition {{ font-size:16px; color:white; font-weight:500; }}
   .hilo {{ font-size:13px; color:rgba(255,255,255,0.8); margin-top:2px; }}
   .body-content {{ padding:24px 24px 40px; }}
-  .stat-grid {{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:28px; }}
-  .stat-card {{ background:white; border:1px solid #eee6d8; border-radius:14px; padding:14px 10px; text-align:center; }}
-  .stat-label {{ font-size:11px; color:var(--muted); margin-bottom:6px; }}
-  .stat-value {{ font-family:'Noto Serif KR',serif; font-size:18px; font-weight:600; }}
-  .stat-value.warn {{ color:#c96b3f; }}
+  .stat-card {{ background:white; border:1px solid #eee6d8; border-radius:14px; padding:18px; text-align:center; margin-bottom:28px; }}
+  .stat-label {{ font-size:12px; color:var(--muted); margin-bottom:8px; letter-spacing:0.04em; }}
+  .stat-value {{ font-family:'Noto Serif KR',serif; font-size:28px; font-weight:700; color:#c96b3f; }}
   .footer-note {{ text-align:center; font-size:11px; color:#b7b0a0; margin-top:12px; }}
 </style>
 </head>
@@ -188,11 +185,9 @@ def generate_weather_page(w):
     </div>
   </div>
   <div class="body-content">
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-label">강수확률</div>
-        <div class="stat-value warn">{w['rain_chance']}%</div>
-      </div>
+    <div class="stat-card">
+      <div class="stat-label">오늘의 강수확률</div>
+      <div class="stat-value">{w['rain_chance']}%</div>
     </div>
     <div class="footer-note">매일 아침 자동으로 업데이트되는 날씨 페이지입니다</div>
   </div>
@@ -202,11 +197,9 @@ def generate_weather_page(w):
 
     os.makedirs("docs", exist_ok=True)
 
-    # 오늘자 메인 페이지 (덮어쓰기)
     with open("docs/index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    # 날짜별 기록 보관 (나중에 과거 예보 조회 기능 만들 때 대비)
     date_key = datetime.datetime.now().strftime("%Y-%m-%d")
     os.makedirs("docs/archive", exist_ok=True)
     with open(f"docs/archive/{date_key}.html", "w", encoding="utf-8") as f:
@@ -239,7 +232,7 @@ def send_kakao_me(text, access_token):
         print(f"❌ 전송 실패: {res.text}")
 
 # ==========================================
-# 🔄 실행 메인 루틴 (최초 1회 토큰 발급용 - 임시)
+# 🔄 실행 메인 루틴 (최초 1회 토큰 발급용 - 임시, 이번 한 번만 실행)
 # ==========================================
 def job():
     auth_code = "SbZDnxsCfSRV-G0LgPKGfXNHmxWFWhF5lkIdef5YnyIw3pzk1BIgCQAAAAQKDRlTAAABn1uExkHMISgqRbFCUQ"
