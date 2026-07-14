@@ -232,36 +232,29 @@ def send_kakao_me(text, access_token):
         print(f"❌ 전송 실패: {res.text}")
 
 # ==========================================
-# 🔄 실행 메인 루틴 (최초 1회 토큰 발급용 - 임시, 이번 한 번만 실행)
+# 🔄 실행 메인 루틴 
 # ==========================================
 def job():
-    auth_code = "q0ujoMB6XMZaKWjM2kvHz1_MN9Sv2AvC4e9NdE-i2X7ifoTNHkGMjwAAAAQKFxKWAAABn2AC55aQgW3aWXatGQ"
+    db_tokens = get_tokens_from_firebase()
+    if not db_tokens:
+        print("❌ Firebase 메모장이 비어있거나 주소가 잘못되어 읽을 수 없습니다.")
+        return
 
     rest_key = os.environ.get("KAKAO_REST_KEY")
     client_secret = os.environ.get("KAKAO_CLIENT_SECRET")
 
-    print("🔑 새 앱의 비밀 코드로 최초 토큰 세트 발급을 요청합니다...")
-    url = "https://kauth.kakao.com/oauth/token"
-    payload = {
-        "grant_type": "authorization_code",
-        "client_id": rest_key,
-        "client_secret": client_secret,
-        "redirect_uri": "http://localhost:3000",
-        "code": auth_code
-    }
-    res = requests.post(url, data=payload).json()
+    print("🔄 Firebase 토큰을 사용해 카카오 토큰 갱신을 시도합니다...")
+    new_access, new_refresh = refresh_kakao_token(rest_key, client_secret, db_tokens["refresh_token"])
 
-    access_token = res.get("access_token")
-    refresh_token = res.get("refresh_token")
+    if not new_access:
+        print("❌ 토큰 확보 실패로 작업을 중단합니다. 파이어베이스에 싱싱한 토큰이 들어있는지 확인해 주세요.")
+        return
 
-    if access_token and refresh_token:
-        update_tokens_to_firebase(access_token, refresh_token)
-        print("🎉 [대성공] 최초 토큰 충전 완료!")
-        weather_data = get_kma_weather()
-        generate_weather_page(weather_data)
-        kakao_text = build_kakao_text(weather_data)
-        send_kakao_me(kakao_text, access_token)
-    else:
-        print("❌ 토큰 발급 실패:", res)
+    update_tokens_to_firebase(new_access, new_refresh)
+
+    weather_data = get_kma_weather()
+    generate_weather_page(weather_data)
+    kakao_text = build_kakao_text(weather_data)
+    send_kakao_me(kakao_text, new_access)
 
 job()
